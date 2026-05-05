@@ -2,33 +2,43 @@ from transformers import pipeline
 from app.data_loader import load_data
 from app.config import TEXT_COLUMN
 
-# cargar modelo UNA sola vez (importante)
+# Cargar modelo local
 sentiment_pipeline = pipeline("sentiment-analysis")
 
 def analizar_sentimientos():
-    df = load_data()
+    try:
+        df = load_data()
+        # Analizar una muestra representativa
+        sample_size = min(len(df), 200)
+        sample_df = df.sample(sample_size)
 
-    textos = df[TEXT_COLUMN].tolist()
+        textos = sample_df[TEXT_COLUMN].dropna().astype(str).tolist()
 
-    # limitar para pruebas (muy importante)
-    textos = textos[:50]
+        if not textos:
+            return {"error": "No hay datos disponibles para análisis."}
 
-    resultados = sentiment_pipeline(
-        textos,
-        truncation=True,
-        max_length=512
-    )
+        resultados = sentiment_pipeline(textos, truncation=True, max_length=512)
 
-    # contar resultados
-    conteo = {"POSITIVE": 0, "NEGATIVE": 0}
+        conteo = {"POSITIVE": 0, "NEGATIVE": 0, "NEUTRAL": 0}
+        for r in resultados:
+            label = r["label"].upper()
+            if label in conteo:
+                conteo[label] += 1
+            else:
+                conteo["NEUTRAL"] += 1
 
-    for r in resultados:
-        conteo[r["label"]] += 1
+        clima = "Positivo" if conteo["POSITIVE"] > conteo["NEGATIVE"] else "Negativo"
+        if abs(conteo["POSITIVE"] - conteo["NEGATIVE"]) < (sample_size * 0.1):
+            clima = "Neutral/Mixto"
 
-    total = len(resultados)
+        return {
+            "total_analizado": len(resultados),
+            "conteo": conteo,
+            "clima_general": clima,
+            "confianza_promedio": sum([r['score'] for r in resultados]) / len(resultados) if resultados else 0
+        }
 
-    return {
-        "total": total,
-        "positivo": conteo["POSITIVE"],
-        "negativo": conteo["NEGATIVE"]
-    }
+    except Exception as e:
+        return {"error": "Error en el servicio de sentimientos", "detalle": str(e)}
+
+
