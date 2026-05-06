@@ -1,3 +1,5 @@
+import html
+
 from app.agent.prompts import PROMPT_BASE
 from app.agent.tools import (
     obtener_propagacion,
@@ -33,6 +35,7 @@ def _formatear_resumen(respuesta):
 
     resumen = resumen.replace("Resume el siguiente texto:", "")
     resumen = " ".join(resumen.split())
+    resumen = html.unescape(resumen)
 
     mitad = len(resumen) // 2
     if resumen[:mitad].strip() and resumen[:mitad].strip() == resumen[mitad:].strip():
