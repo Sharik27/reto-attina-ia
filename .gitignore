@@ -1,72 +1,9 @@
-# =========================
-# 🐍 PYTHON
-# =========================
+.env
 __pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.so
-*.egg
-*.egg-info/
+*.pyc
+.vscode/
+.idea/
+.DS_Store
 dist/
 build/
-
-# =========================
-# 📦 ENTORNO VIRTUAL
-# =========================
-venv/
-.env/
-.env
-
-# =========================
-# 🧠 HUGGING FACE / MODELOS
-# =========================
-.cache/
-huggingface/
-*.safetensors
-*.bin
-*.pt
-
-# =========================
-# 📊 DATASETS (opcional)
-# =========================
-data/*.parquet
-data/*.csv
-data/*.json
-
-# =========================
-# 💻 VS CODE
-# =========================
-.vscode/
-
-# =========================
-# 🧪 TEST / CACHE
-# =========================
-.pytest_cache/
-.coverage
-htmlcov/
-
-# =========================
-# 🪵 LOGS
-# =========================
-*.log
-logs/
-*.jsonl
-
-# =========================
-# 🖥️ SISTEMA OPERATIVO
-# =========================
-.DS_Store
-Thumbs.db
-
-# =========================
-# 🔑 VARIABLES SENSIBLES
-# =========================
-.env
-*.env
-
-# =========================
-# 📄 ARCHIVOS TEMPORALES
-# =========================
-*.tmp
-*.bak
+*.parquet
