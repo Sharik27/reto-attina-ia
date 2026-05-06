@@ -91,10 +91,36 @@ La observabilidad permite revisar:
 - costos
 - calidad de respuesta
 
-Actualmente existe una observabilidad minima:
+Actualmente existe observabilidad local implementada:
 
-- `trace.py`: registra pregunta, plan, tools ejecutadas, errores y fallback.
-- `openai_tool_agent.py`: puede devolver una traza local con modo, modelo, tools y errores.
+- `trace.py`: registra pregunta, plan, timestamps, duracion, modo de ejecucion, modelo, tools ejecutadas, errores y fallback.
+- `tool_calling_agent.py`: guarda trazas del modo deterministico.
+- `openai_tool_agent.py`: guarda trazas del modo OpenAI y registra si se usa fallback.
+
+La observabilidad local usa logs estructurados y persistencia en JSONL:
+
+```text
+logs/agent_traces.jsonl
+```
+
+No depende de herramientas externas. Esto reduce costo, evita configuraciones adicionales y mantiene estable la demo.
+
+La diferencia principal es:
+
+- Observabilidad local: implementada en el proyecto, basada en trazas JSONL y salida legible en consola.
+- Observabilidad avanzada: no implementada todavia, basada en plataformas externas para monitoreo, evaluacion y analisis mas profundo.
+
+La traza local permite revisar:
+
+- duracion de ejecucion
+- cantidad de tools usadas
+- herramientas ejecutadas
+- errores
+- uso de fallback
+- modo deterministico u OpenAI
+- modelo usado si aplica
+
+### Extension a herramientas de observabilidad
 
 Herramientas futuras:
 
@@ -103,7 +129,7 @@ Herramientas futuras:
 - Phoenix Arize: util si se agregan embeddings, RAG o analisis mas profundo.
 - Ragas: util para evaluacion formal de respuestas, especialmente en sistemas RAG.
 
-No se implementan todavia para evitar dependencias externas y mantener compatibilidad con Python 3.13.
+Estas herramientas no se integraron todavia para evitar costos, cuentas externas, dependencias adicionales y complejidad operativa. Sin embargo, el sistema es compatible conceptualmente con ellas porque ya produce trazas estructuradas con modo, tools, errores, duracion y fallback.
 
 ## LangChain
 
@@ -177,6 +203,7 @@ Medidas de control:
 - `temperature=0`
 - fallback automatico sin API key
 - no hacer pruebas masivas
+- trazabilidad local para medir duracion, tools usadas y fallback
 
 Comparacion:
 
@@ -187,6 +214,15 @@ Comparacion:
 | Hugging Face local | Bajo | Sin API paga | Consumo local alto |
 | Ollama local | Bajo/medio | LLM local | Instalacion y hardware |
 | LangSmith/Langfuse | Variable | Observabilidad | Configuracion externa |
+
+La trazabilidad local tambien aporta a FinOps porque permite medir:
+
+- duracion de ejecucion
+- numero de tools usadas
+- uso de OpenAI frente a fallback deterministico
+- errores que podrian generar reintentos o consumo innecesario
+
+Con estos datos se puede justificar cuando usar OpenAI y cuando usar el planner deterministico para controlar costos.
 
 ## Transfer learning y destilacion LLM
 

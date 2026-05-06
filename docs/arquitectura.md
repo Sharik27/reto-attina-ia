@@ -161,3 +161,51 @@ Agente principal
 ```
 
 No se implementa todavia porque el proyecto actual solo necesita un agente conversacional. Se deja como extension futura para Multi-Agent Collaboration.
+
+## Trazabilidad y Observabilidad del Agente
+
+El sistema implementa observabilidad local para el agente conversacional. Esto significa que cada ejecucion puede dejar una traza legible y estructurada sin depender de herramientas externas como LangSmith, Langfuse, Phoenix Arize o Ragas.
+
+En cada ejecucion se registra:
+
+- `timestamp_inicio`: momento en que inicia la ejecucion.
+- `timestamp_fin`: momento en que termina la ejecucion.
+- `duracion_ms`: duracion total en milisegundos.
+- `modo_ejecucion`: modo usado, por ejemplo `tool_calling_deterministico` u `openai_tool_calling`.
+- `modelo`: modelo usado si aplica, por ejemplo `gpt-4o-mini`.
+- `numero_tools`: cantidad de herramientas ejecutadas.
+- `resumen_tools`: lista resumida de herramientas llamadas.
+- `errores`: errores capturados durante la ejecucion.
+- `fallback_usado`: indica si el sistema uso una ruta alternativa.
+
+Las trazas se generan en tiempo real, se muestran en consola de forma legible y se guardan como registros JSONL en:
+
+```text
+logs/agent_traces.jsonl
+```
+
+Cada linea del archivo representa una ejecucion del agente. No se guardan API keys ni datos sensibles.
+
+El proposito de esta observabilidad local es:
+
+- facilitar debugging
+- permitir auditoria basica
+- mejorar la transparencia del agente
+- analizar desempeno y duracion
+- revisar uso de tools y fallback
+
+Ejemplo de salida en consola:
+
+```text
+Trazabilidad local:
+- Modo: tool_calling_deterministico
+- Modelo: no aplica
+- Inicio: 2026-05-06T14:20:01.123456+00:00
+- Fin: 2026-05-06T14:20:01.654321+00:00
+- Duracion: 530.87 ms
+- Tools ejecutadas: 1
+- Resumen tools: analizar_propagacion
+- Fallback usado: False
+```
+
+Esta capa de observabilidad es suficiente para una demo academica porque muestra que el agente no es una caja negra: se puede revisar que modo uso, que herramientas ejecuto, cuanto tardo y si necesito fallback.
