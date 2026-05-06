@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atinna Analytics — Intelligence Console</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0b;
+      --surface: #111112;
+      --surface2: #1a1a1c;
+      --border: #242426;
+      --accent: #3b82f6; /* Azul sutil */
+      --text: #f9fafb;
+      --text-muted: #94a3b8;
+      --user-bubble: #1e1e20;
+      --bot-bubble: #111112;
+      --radius: 8px; /* Bordes más rectos para elegancia */
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ───── HEADER ───── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Mode Toggle */
+    .mode-toggle {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .mode-btn {
+      padding: 6px 16px;
+      border-radius: 2px;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+      background: transparent;
+    }
+
+    .mode-btn.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ───── QUICK ACTIONS ───── */
+    .quick-actions {
+      display: flex;
+      gap: 12px;
+      padding: 12px 32px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+
+    .quick-btn {
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .quick-btn:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    /* ───── CHAT AREA ───── */
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .welcome-card {
+      margin: auto;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .welcome-card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .welcome-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 85%;
+    }
+
+    .message.user { align-self: flex-end; align-items: flex-end; }
+    .message.bot { align-self: flex-start; align-items: flex-start; }
+
+    .message-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .bubble {
+      padding: 14px 18px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .message.user .bubble {
+      background: var(--user-bubble);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .message.bot .bubble {
+      background: var(--bot-bubble);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .message.bot .bubble strong { color: var(--text); }
+
+    .bubble pre {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px;
+      font-size: 12px;
+      margin-top: 12px;
+      color: #9cdcfe;
+    }
+
+    .mode-badge {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    /* Typing */
+    #typing { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ───── INPUT AREA ───── */
+    .input-area {
+      display: flex;
+      padding: 24px 32px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    #user-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 0;
+      resize: none;
+      outline: none;
+      max-height: 100px;
+    }
+
+    #user-input:focus { border-color: var(--text-muted); }
+
+    #send-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0 24px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #send-btn:hover { background: var(--text); color: var(--bg); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-text">Atinna Core</div>
+      <div class="logo-sub">Analytical Intelligence</div>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-basic" onclick="setMode('basico')">Manual</button>
+      <button class="mode-btn" id="btn-smart" onclick="setMode('inteligente')">Autonomous</button>
+    </div>
+    <div class="status-pill"><div class="status-dot"></div> System Online</div>
+  </header>
+
+  <div class="quick-actions">
+    <button class="quick-btn" onclick="sendQuick('Analizar sentimientos')">Sentimientos</button>
+    <button class="quick-btn" onclick="sendQuick('Generar resumen')">Resumen</button>
+    <button class="quick-btn" onclick="sendQuick('Métricas de propagación')">Propagación</button>
+    <button class="quick-btn" onclick="sendQuick('Diagnóstico completo')">Completo</button>
+  </div>
+
+  <div id="chat-container">
+    <div class="welcome-card" id="welcome">
+      <h2>Terminal de Análisis</h2>
+      <p>Seleccione un motor de procesamiento e ingrese una consulta para iniciar la extracción de datos.</p>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <textarea id="user-input" rows="1" placeholder="Ingrese comando..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button id="send-btn" onclick="sendMessage()">Ejecutar</button>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:8000';
+    let currentMode = 'basico';
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('btn-basic').classList.toggle('active', mode === 'basico');
+      document.getElementById('btn-smart').classList.toggle('active', mode === 'inteligente');
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function sendQuick(text) {
+      document.getElementById('user-input').value = text;
+      sendMessage();
+    }
+
+    function scrollToBottom() {
+      const container = document.getElementById('chat-container');
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const pregunta = input.value.trim();
+      if (!pregunta) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      
+      const container = document.getElementById('chat-container');
+      const welcome = document.getElementById('welcome');
+      if (welcome) welcome.remove();
+
+      // User message
+      const uDiv = document.createElement('div');
+      uDiv.className = 'message user';
+      uDiv.innerHTML = `<div class="message-label">User</div><div class="bubble">${pregunta}</div>`;
+      container.appendChild(uDiv);
+      scrollToBottom();
+      
+      // Typing
+      const tDiv = document.createElement('div');
+      tDiv.id = 'typing';
+      tDiv.innerText = 'Procesando...';
+      container.appendChild(tDiv);
+      scrollToBottom();
+
+      try {
+        const res = await fetch(`${API_URL}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pregunta, modo: currentMode }),
+        });
+        const data = await res.json();
+        
+        tDiv.remove();
+        const bDiv = document.createElement('div');
+        bDiv.className = 'message bot';
+        
+        const isSmrt = data.modo === 'inteligente';
+        const formatted = data.respuesta
+          .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br>');
+
+        bDiv.innerHTML = `
+          <div class="message-label">System</div>
+          <div class="bubble">${formatted}</div>
+          <div class="mode-badge">${isSmrt ? 'Autonomous Engine' : 'Manual Engine'}</div>
+        `;
+        container.appendChild(bDiv);
+        scrollToBottom();
+      } catch (err) {
+        tDiv.remove();
+        alert('Error de conexión con el servidor.');
+      }
+    }
+  </script>
+</body>
+</html>

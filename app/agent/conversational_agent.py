@@ -95,7 +95,24 @@ def _requiere_propagacion(pregunta):
     return any(clave in pregunta for clave in claves)
 
 
-def responder(pregunta):
+def responder(pregunta, modo="basico"):
+    from app.config import GROQ_API_KEY
+    
+    # Normalizamos el modo para ser más flexibles
+    modo = modo.lower().strip()
+    es_modo_ia = modo in ["inteligente", "llm", "ai", "pro"]
+
+    # Si se pide modo inteligente y hay API KEY, usamos Groq
+    if es_modo_ia and GROQ_API_KEY:
+        try:
+            from app.agent.groq_agent import responder_con_groq
+            return responder_con_groq(pregunta)
+        except Exception as e:
+            return f"Error al iniciar agente inteligente: {e}. Usando modo básico...\n\n" + _responder_basico(pregunta)
+    
+    return _responder_basico(pregunta)
+
+def _responder_basico(pregunta):
     pregunta_normalizada = _normalizar(pregunta)
 
     try:
@@ -123,8 +140,15 @@ def responder(pregunta):
 
 
 if __name__ == "__main__":
-    print(PROMPT_BASE)
-    print()
+    print("--- Sistema de Análisis de Atinna ---")
+    print("Elige el motor de análisis:")
+    print("1. Modo Básico (Determinístico - Sin API Key)")
+    print("2. Modo Inteligente (IA/LLM - Requiere Groq Key)")
+    
+    opcion = input("\nSelección [1]: ").strip()
+    modo = "inteligente" if opcion == "2" else "basico"
+    
+    print(f"\n--- Modo {'INTELIGENTE (Groq)' if modo == 'inteligente' else 'BÁSICO (Local)'} activado ---")
     pregunta_usuario = input("Pregunta: ")
-    print()
-    print(responder(pregunta_usuario))
+    print("\nProcesando...")
+    print(responder(pregunta_usuario, modo=modo))

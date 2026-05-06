@@ -1,158 +1,142 @@
-# IA Reto Attina - Agente Conversacional
+# 🧠 Reto ICESI — Atinna Analytics Agent
 
-### Desarrolladores
-* Sharik Camila Rueda
-* Mariana De La Cruz
-* Juan Camilo Molina
-* Alexis Delgado
-* Valentina Gomez
+Sistema de análisis de conversaciones digitales con Agente Conversacional inteligente. Desarrollado para el reto de ICESI sobre **LLM/NLP y Agentes Conversacionales**.
 
-## Descripcion del proyecto
+---
 
-Este proyecto implementa un sistema de analisis de conversaciones digitales. El sistema expone servicios de analisis mediante FastAPI y construye un agente conversacional que consume esos servicios como herramientas (tools).
+## 📋 Descripción
 
-El proyecto incluye:
+Este proyecto expone tres microservicios de análisis (MCPs) sobre un dataset de conversaciones digitales en formato Parquet, y los integra con un **Agente Conversacional** que decide qué herramienta llamar según la pregunta del usuario.
 
-- Analisis de sentimientos.
-- Generacion de resumen.
-- Analisis de propagacion.
-- Agente conversacional con Tool Calling hibrido.
-- Tools HTTP conectadas a endpoints FastAPI.
-- Observabilidad local mediante trazas estructuradas.
+---
 
-## Arquitectura
+## ⚙️ Servicios MCP Implementados
 
-El sistema implementa un agente con **Tool Calling hibrido**, combinando un planner deterministico(basado en reglas) y un modelo LLM mediante OpenAI, con fallback para control de costos y estabilidad.
+| Servicio | Endpoint | Descripción |
+|---|---|---|
+| Análisis de Sentimientos | `GET /analisis/sentimientos` | Clasifica mensajes en positivos/negativos usando HuggingFace Transformers |
+| Resumen de Conversación | `GET /analisis/resumen` | Genera un resumen de los temas principales usando `distilbart-cnn-12-6` |
+| Análisis de Propagación *(Obligatorio)* | `GET /analisis/propagacion` | Analiza hilos, profundidad, alcance y viralidad de mensajes |
+| Chat con el Agente | `POST /chat` | Punto de entrada del Agente Conversacional (soporta modo básico e inteligente) |
 
-La arquitectura separa:
+---
 
-- Servicios analiticos en FastAPI.
-- Tools HTTP que llaman los endpoints.
-- Agente deterministico basado en reglas (sin costo).
-- Agente opcional con OpenAI Tool Calling.
-- Trazabilidad local para auditoria y debugging.
+## 🤖 Modos del Agente
 
-## Instalacion
+El sistema soporta **dos modos de operación**:
 
-### Crear entorno virtual
+### Modo 1 — Básico (Determinístico)
+- No requiere API Key.
+- Usa un **planner basado en palabras clave** para identificar la intención del usuario.
+- Llama directamente a los servicios de análisis y devuelve los resultados formateados.
+- Implementado en: `app/agent/conversational_agent.py`
 
-```bash
-python -m venv venv
-```
+### Modo 2 — Inteligente (LLM / Tool-Calling)
+- Requiere una **API Key de Groq** (gratuita en [console.groq.com](https://console.groq.com/keys)).
+- Usa **Llama 4 Scout** en Groq con **Tool Calling** real para razonar sobre la intención del usuario.
+- El LLM recibe el Schema de las herramientas disponibles, decide cuáles llamar y genera una respuesta natural en español.
+- Implementado en: `app/agent/groq_agent.py`
 
-### Activar entorno (Windows - Git Bash)
+---
 
-```bash
-source venv/Scripts/activate
-```
+## 🚀 Instalación y Uso
 
-### Instalar dependencias
+### 1. Clonar el repositorio e instalar dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Configuracion
+### 2. (Opcional) Configurar API Key de Groq para el modo inteligente
 
-### Variable de entorno
+Edita `app/config.py` y añade tu clave:
+
+```python
+GROQ_API_KEY = "tu_api_key_aqui"
+```
+
+Consigue tu key gratuita en: https://console.groq.com/keys
+
+### 3. Colocar el dataset
+
+Asegúrate de que el archivo Parquet esté en:
+
+```
+data/Reto_data_20251023_122206.parquet
+```
+
+### 4. Levantar la API
 
 ```bash
-export OPENAI_API_KEY="YOUR_API_KEY_HERE"
+python -m uvicorn app.api.main:app --reload
 ```
 
-Esta variable es opcional. Si no se configura, el sistema usa el planner deterministico como fallback y puede funcionar sin conexion a OpenAI.
+La API estará disponible en: `http://localhost:8000`
 
-## Ejecucion del sistema
-
-### Levantar API - Terminal 1
+### 5. Usar el Agente por consola
 
 ```bash
-uvicorn app.api.main:app --reload
-```
-- Dejar esta terminal corriendo.
-- La API expone los endpoints que consumen los agentes.
-
-## Ejecutar el agente (Terminal 2)
-
-Elegir uno de los siguientes modos de ejecución:
-
-### Opción A: Agente determinístico (sin API Key)
-```bash
-python -m app.agent.tool_calling_agent
-```
-- No requiere conexión a OpenAI
-- Usa un planner basado en reglas
-- Recomendado como modo por defecto
-
-
-### Opción B: Agente con OpenAI (Tool Calling real)
-
-```bash
-python -m app.agent.openai_tool_agent
-```
-- Requiere configurar `OPENAI_API_KEY`
-- Usa un modelo LLM para decidir las tools
-- Mantiene fallback automático al modo determinístico
-
-## Ejemplos de uso
-
-Preguntas sugeridas para probar el agente:
-
-```text
-muestrame sentimientos
+python -m app.agent.conversational_agent
 ```
 
-```text
-muestrame propagacion
+Verás un menú para elegir entre Modo 1 (básico) o Modo 2 (inteligente con Groq).
+
+### 6. Interfaz Web
+
+Abre el archivo `ui/index.html` directamente en el navegador. Asegúrate de que la API esté corriendo en el puerto 8000.
+
+---
+
+## 🗂️ Estructura del Proyecto
+
+```
+reto-attina-ia/
+├── app/
+│   ├── api/
+│   │   └── main.py              # FastAPI — Endpoints REST (MCPs + Chat)
+│   ├── agent/
+│   │   ├── conversational_agent.py  # Agente determinístico + selector de modo
+│   │   ├── groq_agent.py            # Agente inteligente con Groq Tool Calling
+│   │   ├── tool_calling_agent.py    # Agente tool-calling determinístico
+│   │   ├── planner.py               # Planner de intenciones
+│   │   ├── tools.py                 # Wrappers de herramientas
+│   │   ├── tool_specs.py            # Especificaciones de herramientas
+│   │   ├── prompts.py               # Prompts base del agente
+│   │   └── trace.py                 # Trazabilidad de ejecución
+│   ├── services/
+│   │   ├── sentiment.py     # Servicio de análisis de sentimientos
+│   │   ├── summary.py       # Servicio de resumen
+│   │   └── propagation.py   # Servicio de análisis de propagación
+│   ├── data_loader.py       # Carga del dataset Parquet
+│   └── config.py            # Configuración global (columnas, rutas, API Keys)
+├── ui/
+│   └── index.html           # Interfaz web de chat
+├── data/
+│   └── Reto_data_20251023_122206.parquet
+├── docs/
+├── test/
+└── requirements.txt
 ```
 
-```text
-haz analisis completo
-```
+---
 
-## Observabilidad
+## 🛠️ Stack Tecnológico
 
-El sistema implementa observabilidad local mediante trazas estructuradas.
+- **Backend**: Python, FastAPI, Uvicorn
+- **IA/NLP**: HuggingFace Transformers, PyTorch
+- **LLM (Modo Inteligente)**: Groq Cloud — Llama 4 Scout (`meta-llama/llama-4-scout-17b-16e-instruct`)
+- **Datos**: Pandas, PyArrow (Parquet)
+- **Interfaz**: HTML5, CSS3, JavaScript (Vanilla)
 
-Cada ejecucion registra:
+---
 
-- duracion
-- tools utilizadas
-- modo de ejecucion
-- uso de fallback
+## 📊 Criterios del Reto Cubiertos
 
-Las trazas se guardan en:
-
-```text
-logs/agent_traces.jsonl
-```
-
-Estas trazas permiten revisar ejecuciones del agente, depurar errores, auditar decisiones y analizar desempeno sin depender de herramientas externas.
-
-## FinOps
-
-El uso de OpenAI esta limitado y controlado, priorizando el planner deterministico como modo por defecto para reducir costos.
-
-El sistema aplica estas medidas:
-
-- OpenAI es opcional.
-- Se usa un modelo economico cuando se habilita Tool Calling real.
-- El agente mantiene fallback deterministico.
-- No se requiere OpenAI para ejecutar el flujo base.
-
-## Flujo del sistema
-
-```text
-Usuario -> Agente -> Tool Calling -> Tools -> API -> Respuesta + Traza
-```
-
-## Notas importantes
-
-- La API debe estar siempre activa en una terminal independiente.
-- Los agentes se ejecutan en otra terminal separada.
-- Ambos agentes consumen los mismos endpoints HTTP.
-- Si no hay API activa, los agentes no podrán funcionar correctamente.
-- No subir API keys al repositorio.
-- Reemplazar cualquier API key de ejemplo por `YOUR_API_KEY_HERE`.
-- `logs/` esta ignorado en `.gitignore`.
-- El sistema funciona sin conexion a OpenAI usando el planner deterministico.
+| Criterio | Estado |
+|---|---|
+| 3 Servicios MCP funcionales (Sentimientos, Resumen, Propagación) | ✅ |
+| Agente Conversacional con identificación de intención | ✅ |
+| Tool-Calling con LLM real (Groq) | ✅ |
+| Respuesta natural generada por el LLM | ✅ |
+| Interfaz de demo (web + terminal) | ✅ |
+| Framework avanzado para puntos extra | ✅ (Groq Tool Calling) |
