@@ -6,7 +6,15 @@ from app.agent.conversational_agent import (
 )
 from app.agent.planner import planear_tool_calls
 from app.agent.tools import obtener_propagacion, obtener_resumen, obtener_sentimientos
-from app.agent.trace import crear_traza, marcar_fallback, registrar_error, registrar_tool
+from app.agent.trace import (
+    crear_traza,
+    finalizar_traza,
+    formatear_traza,
+    guardar_traza_jsonl,
+    marcar_fallback,
+    registrar_error,
+    registrar_tool,
+)
 
 
 TOOL_EXECUTORS = {
@@ -22,13 +30,20 @@ TOOL_FORMATTERS = {
 }
 
 
-def responder_con_tool_calling(pregunta, incluir_traza=False):
+def responder_con_tool_calling(pregunta, incluir_traza=False, guardar_traza=True):
     plan = planear_tool_calls(pregunta)
-    traza = crear_traza(pregunta, plan)
+    traza = crear_traza(
+        pregunta,
+        plan,
+        modo_ejecucion="tool_calling_deterministico",
+    )
 
     if not plan:
         respuesta = responder_basico(pregunta)
         marcar_fallback(traza)
+        finalizar_traza(traza)
+        if guardar_traza:
+            guardar_traza_jsonl(traza)
         return _con_traza(respuesta, traza, incluir_traza)
 
     try:
@@ -44,11 +59,17 @@ def responder_con_tool_calling(pregunta, incluir_traza=False):
             bloques.append(formatter(resultado))
 
         respuesta = "\n\n".join(bloques)
+        finalizar_traza(traza)
+        if guardar_traza:
+            guardar_traza_jsonl(traza)
         return _con_traza(respuesta, traza, incluir_traza)
     except Exception as exc:
         registrar_error(traza, exc)
         marcar_fallback(traza)
         respuesta = responder_basico(pregunta)
+        finalizar_traza(traza)
+        if guardar_traza:
+            guardar_traza_jsonl(traza)
         return _con_traza(respuesta, traza, incluir_traza)
 
 
@@ -69,5 +90,4 @@ if __name__ == "__main__":
     print()
     print(resultado["respuesta"])
     print()
-    print("Trazabilidad:")
-    print(resultado["traza"])
+    print(formatear_traza(resultado["traza"]))

@@ -7,6 +7,15 @@ from app.agent.conversational_agent import (
 )
 from app.agent.tool_calling_agent import responder_con_tool_calling
 from app.agent.tools import obtener_propagacion, obtener_resumen, obtener_sentimientos
+from app.agent.trace import (
+    crear_traza,
+    finalizar_traza,
+    formatear_traza,
+    guardar_traza_jsonl,
+    marcar_fallback,
+    registrar_error,
+    registrar_tool,
+)
 
 
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -65,19 +74,33 @@ TOOL_FORMATTERS = {
 
 
 def responder_con_openai_tool_calling(pregunta, incluir_traza=False):
+    model = os.getenv("OPENAI_MODEL", DEFAULT_MODEL)
+    traza = crear_traza(
+        pregunta,
+        modo_ejecucion="openai_tool_calling",
+        modelo=model,
+    )
+
     if not os.getenv("OPENAI_API_KEY"):
-        respuesta = responder_con_tool_calling(pregunta)
-        return _con_traza(respuesta, _crear_traza(pregunta, fallback=True), incluir_traza)
+        registrar_error(traza, "OPENAI_API_KEY no configurada; se usa fallback deterministico.")
+        marcar_fallback(traza)
+        respuesta = responder_con_tool_calling(pregunta, guardar_traza=False)
+        finalizar_traza(traza)
+        guardar_traza_jsonl(traza)
+        return _con_traza(respuesta, traza, incluir_traza)
 
     try:
         tool_calls = _pedir_tool_calls(pregunta)
 
         if not tool_calls:
-            respuesta = responder_con_tool_calling(pregunta)
-            return _con_traza(respuesta, _crear_traza(pregunta, fallback=True), incluir_traza)
+            registrar_error(traza, "OpenAI no solicito ninguna herramienta; se usa fallback deterministico.")
+            marcar_fallback(traza)
+            respuesta = responder_con_tool_calling(pregunta, guardar_traza=False)
+            finalizar_traza(traza)
+            guardar_traza_jsonl(traza)
+            return _con_traza(respuesta, traza, incluir_traza)
 
         bloques = []
-        tools_ejecutadas = []
 
         for tool_call in tool_calls:
             nombre = tool_call.function.name
@@ -85,23 +108,31 @@ def responder_con_openai_tool_calling(pregunta, incluir_traza=False):
                 continue
 
             resultado = TOOL_EXECUTORS[nombre]()
-            tools_ejecutadas.append({
+            registrar_tool(traza, {
                 "name": nombre,
                 "args": tool_call.function.arguments,
-                "resultado": resultado,
-            })
+                "reason": "Tool solicitada por OpenAI.",
+            }, resultado)
             bloques.append(TOOL_FORMATTERS[nombre](resultado))
 
         if not bloques:
-            respuesta = responder_con_tool_calling(pregunta)
-            return _con_traza(respuesta, _crear_traza(pregunta, fallback=True), incluir_traza)
+            registrar_error(traza, "No se ejecuto ninguna herramienta valida; se usa fallback deterministico.")
+            marcar_fallback(traza)
+            respuesta = responder_con_tool_calling(pregunta, guardar_traza=False)
+            finalizar_traza(traza)
+            guardar_traza_jsonl(traza)
+            return _con_traza(respuesta, traza, incluir_traza)
 
         respuesta = _resumir_respuesta("\n\n".join(bloques))
-        traza = _crear_traza(pregunta, fallback=False, tools_ejecutadas=tools_ejecutadas)
+        finalizar_traza(traza)
+        guardar_traza_jsonl(traza)
         return _con_traza(respuesta, traza, incluir_traza)
     except Exception as exc:
-        respuesta = responder_con_tool_calling(pregunta)
-        traza = _crear_traza(pregunta, fallback=True, errores=[str(exc)])
+        registrar_error(traza, exc)
+        marcar_fallback(traza)
+        respuesta = responder_con_tool_calling(pregunta, guardar_traza=False)
+        finalizar_traza(traza)
+        guardar_traza_jsonl(traza)
         return _con_traza(respuesta, traza, incluir_traza)
 
 
@@ -139,17 +170,6 @@ def _resumir_respuesta(texto):
     return "\n".join(lineas[:12])
 
 
-def _crear_traza(pregunta, fallback, tools_ejecutadas=None, errores=None):
-    return {
-        "pregunta": pregunta,
-        "modo": "openai_tool_calling",
-        "modelo": os.getenv("OPENAI_MODEL", DEFAULT_MODEL),
-        "tools_ejecutadas": tools_ejecutadas or [],
-        "errores": errores or [],
-        "fallback_usado": fallback,
-    }
-
-
 def _con_traza(respuesta, traza, incluir_traza):
     if incluir_traza:
         return {
@@ -167,5 +187,4 @@ if __name__ == "__main__":
     print()
     print(resultado["respuesta"])
     print()
-    print("Trazabilidad:")
-    print(resultado["traza"])
+    print(formatear_traza(resultado["traza"]))
