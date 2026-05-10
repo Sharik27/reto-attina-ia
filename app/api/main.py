@@ -25,6 +25,10 @@ app.mount("/ui", StaticFiles(directory="ui"), name="ui")
 def home():
     return {"mensaje": "Atinna Analytics API funcionando", "version": "1.0.0"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/analisis/sentimientos")
 def sentimientos():
     return {"resultado": analizar_sentimientos()}

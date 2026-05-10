@@ -87,6 +87,38 @@ Abre el archivo `ui/index.html` directamente en el navegador. Asegúrate de que 
 
 ---
 
+## Despliegue en Render
+
+Configura el proyecto como **Web Service** de Python en Render.
+
+Build command:
+
+```bash
+pip install -r requirements.txt
+```
+
+Start command:
+
+```bash
+uvicorn app.api.main:app --host 0.0.0.0 --port $PORT
+```
+
+Variables de entorno:
+
+```bash
+GROQ_API_KEY=tu_clave_de_groq
+OPENAI_API_KEY=opcional
+OPENAI_MODEL=opcional
+AGENT_API_BASE_URL=https://tu-servicio.onrender.com
+```
+
+Notas:
+- El endpoint `GET /health` puede usarse como health check.
+- El archivo Parquet debe estar disponible en `data/Reto_data_20251023_122206.parquet`.
+- Para el modo inteligente, configura `GROQ_API_KEY`.
+
+---
+
 ## 🗂️ Estructura del Proyecto
 
 ```
