@@ -39,6 +39,50 @@ El sistema soporta **dos modos de operación**:
 
 ---
 
+## Instalación inicial
+
+### Crear entorno virtual
+
+```bash
+python -m venv venv
+```
+
+### Activar entorno virtual
+
+En Windows PowerShell:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+En Windows CMD:
+
+```bat
+venv\Scripts\activate.bat
+```
+
+En Git Bash:
+
+```bash
+source venv/Scripts/activate
+```
+
+### Instalar dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+### Verificar dataset
+
+Asegurate de que el archivo Parquet este en:
+
+```text
+data/Reto_data_20251023_122206.parquet
+```
+
+---
+
 ## Inicio rapido
 
 En Windows, puedes iniciar la demo con doble click o desde PowerShell:
@@ -55,15 +99,19 @@ En Git Bash:
 
 Los scripts activan `venv` si existe, levantan `python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000` y abren `http://127.0.0.1:8000/`.
 
+Si usas Git Bash y el script no tiene permiso de ejecución:
+
+```bash
+chmod +x start_app.sh
+```
+
 ---
 
 ## 🚀 Instalación y Uso
 
-### 1. Clonar el repositorio e instalar dependencias
+### 1. Preparar el entorno
 
-```bash
-pip install -r requirements.txt
-```
+Sigue la sección `Instalación inicial` antes de ejecutar el proyecto por primera vez.
 
 ### 2. (Opcional) Configurar API Key de Groq para el modo inteligente
 
