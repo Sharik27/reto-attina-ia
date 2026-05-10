@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
@@ -17,13 +18,13 @@ app.add_middleware(
 )
 
 # Servir la carpeta UI
-app.mount("/ui", StaticFiles(directory="ui"), name="ui")
+app.mount("/ui", StaticFiles(directory="ui", html=True), name="ui")
 
 # --- Endpoints de análisis individuales (MCPs) ---
 
 @app.get("/")
 def home():
-    return {"mensaje": "Atinna Analytics API funcionando", "version": "1.0.0"}
+    return FileResponse("ui/index.html")
 
 @app.get("/health")
 def health():

@@ -39,6 +39,24 @@ El sistema soporta **dos modos de operación**:
 
 ---
 
+## Inicio rapido
+
+En Windows, puedes iniciar la demo con doble click o desde PowerShell:
+
+```bat
+start_app.bat
+```
+
+En Git Bash:
+
+```bash
+./start_app.sh
+```
+
+Los scripts activan `venv` si existe, levantan `python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000` y abren `http://127.0.0.1:8000/`.
+
+---
+
 ## 🚀 Instalación y Uso
 
 ### 1. Clonar el repositorio e instalar dependencias
@@ -100,7 +118,7 @@ pip install -r requirements.txt
 Start command:
 
 ```bash
-uvicorn app.api.main:app --host 0.0.0.0 --port $PORT
+uvicorn app.api.main:app --host 127.0.0.1 --port $PORT
 ```
 
 Variables de entorno:

@@ -21,7 +21,18 @@ def _crear_tool_call(name, reason):
 def planear_tool_calls(pregunta):
     pregunta = _normalizar(pregunta)
 
-    if _contiene(pregunta, ["analisis completo", "analisis", "diagnostico", "panorama", "todo", "general"]):
+    if _contiene(pregunta, [
+        "analisis completo",
+        "diagnostico completo",
+        "diagnostico",
+        "completo",
+        "analisis general",
+        "analisis integral",
+        "dame todo",
+        "todo",
+        "panorama",
+        "general",
+    ]):
         return [
             _crear_tool_call(
                 "analizar_propagacion",
@@ -37,7 +48,21 @@ def planear_tool_calls(pregunta):
             ),
         ]
 
-    if _contiene(pregunta, ["sentimiento", "sentimientos", "emocion", "emociones", "polaridad", "positivo", "positiva", "negativo", "negativa", "negatividad"]):
+    if _contiene(pregunta, [
+        "sentimiento",
+        "sentimientos",
+        "emociones",
+        "emocion",
+        "polaridad",
+        "positivo",
+        "positiva",
+        "negativo",
+        "negativa",
+        "negatividad",
+        "analisis emocional",
+        "clima emocional",
+        "percepcion",
+    ]):
         return [
             _crear_tool_call(
                 "analizar_sentimientos",
@@ -45,7 +70,22 @@ def planear_tool_calls(pregunta):
             )
         ]
 
-    if _contiene(pregunta, ["propagacion", "propago", "propaga", "difusion", "viralidad", "hilos", "profundidad", "respuestas", "mensaje", "conversacion"]):
+    if _contiene(pregunta, [
+        "propagacion",
+        "propago",
+        "propaga",
+        "difusion",
+        "viralidad",
+        "hilos",
+        "profundidad",
+        "respuestas",
+        "mensaje",
+        "metricas",
+        "alcance",
+        "repercusion",
+        "impacto",
+        "propagado",
+    ]):
         return [
             _crear_tool_call(
                 "analizar_propagacion",
@@ -53,7 +93,17 @@ def planear_tool_calls(pregunta):
             )
         ]
 
-    if _contiene(pregunta, ["resumen", "resume", "sintesis", "sintetiza", "temas", "explica"]):
+    if _contiene(pregunta, [
+        "resumen",
+        "resumir",
+        "resume",
+        "sintesis",
+        "sintetiza",
+        "temas",
+        "explica",
+        "explicar conversacion",
+        "de que trata",
+    ]):
         return [
             _crear_tool_call(
                 "generar_resumen",

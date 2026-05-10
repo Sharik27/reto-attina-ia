@@ -1,4 +1,5 @@
 import html
+import unicodedata
 
 from app.agent.prompts import PROMPT_BASE
 from app.agent.tools import (
@@ -9,7 +10,9 @@ from app.agent.tools import (
 
 
 def _normalizar(texto):
-    return texto.lower().strip()
+    texto = texto.lower().strip()
+    texto = unicodedata.normalize("NFD", texto)
+    return "".join(caracter for caracter in texto if unicodedata.category(caracter) != "Mn")
 
 
 def _formatear_sentimientos(respuesta):
@@ -76,22 +79,69 @@ def _formatear_propagacion(respuesta):
 
 
 def _es_analisis_completo(pregunta):
-    claves = ["analisis completo", "diagnostico", "panorama", "todo", "general"]
+    claves = [
+        "analisis completo",
+        "diagnostico completo",
+        "diagnostico",
+        "completo",
+        "analisis general",
+        "analisis integral",
+        "dame todo",
+        "todo",
+        "panorama",
+        "general",
+    ]
     return any(clave in pregunta for clave in claves)
 
 
 def _requiere_sentimientos(pregunta):
-    claves = ["sentimiento", "sentimientos", "emocion", "emociones", "polaridad", "positivo", "negativo"]
+    claves = [
+        "sentimiento",
+        "sentimientos",
+        "emociones",
+        "emocion",
+        "polaridad",
+        "positivo",
+        "positiva",
+        "negativo",
+        "negativa",
+        "negatividad",
+        "analisis emocional",
+        "clima emocional",
+        "percepcion",
+    ]
     return any(clave in pregunta for clave in claves)
 
 
 def _requiere_resumen(pregunta):
-    claves = ["resumen", "resume", "sintesis", "sintetiza", "temas", "explica"]
+    claves = [
+        "resumen",
+        "resumir",
+        "resume",
+        "sintesis",
+        "sintetiza",
+        "temas",
+        "explica",
+        "explicar conversacion",
+        "de que trata",
+    ]
     return any(clave in pregunta for clave in claves)
 
 
 def _requiere_propagacion(pregunta):
-    claves = ["propagacion", "difusion", "viralidad", "hilos", "profundidad", "respuestas"]
+    claves = [
+        "propagacion",
+        "difusion",
+        "viralidad",
+        "hilos",
+        "profundidad",
+        "respuestas",
+        "metricas",
+        "alcance",
+        "repercusion",
+        "impacto",
+        "propagado",
+    ]
     return any(clave in pregunta for clave in claves)
 
 
